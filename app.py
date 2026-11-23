@@ -1,104 +1,451 @@
 """
 🎮 내 PC 게임 프레임(FPS) 예측기
-- 그래픽카드(GPU)와 그래픽 옵션에 따른 게임별 예상 FPS 및 플레이 적합도 분석 웹앱
+- 그래픽카드(GPU)와 그래픽 품질 옵션에 따른 게임별 예상 FPS 및 플레이 적합도 분석 웹앱
 """
 import streamlit as st
 import pandas as pd
 
 # =============================================
-# 1. 시작: 페이지 설정 및 게이밍 대시보드 디자인
+# 1. 시작: 페이지 설정 및 밝은 하이엔드 애니메이션 UI 스타일
 # =============================================
-st.set_page_config(page_title="내 PC 게임 FPS 예측기", page_icon="🎮", layout="centered")
+st.set_page_config(
+    page_title="FPS STUDIO ✨ 내 PC 게임 프레임 예측기",
+    page_icon="🎮",
+    layout="centered",
+)
 
 st.markdown(
     """
     <style>
-    /* 메인 타이틀 배너 */
-    .gaming-hero {
-        position: relative;
-        padding: 1.8rem 2rem;
-        border-radius: 20px;
-        margin-bottom: 1.5rem;
-        color: #ffffff;
-        background: linear-gradient(135deg, #0b0f19 0%, #1e1b4b 50%, #312e81 100%);
-        border: 1px solid rgba(129, 140, 248, 0.35);
-        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.3);
-        overflow: hidden;
+    /* 깔끔하고 세련된 최신 한글·영문 폰트 임포트 (SUIT + Plus Jakarta Sans) */
+    @import url('https://cdn.jsdelivr.net/gh/sun-typeface/SUIT@2/fonts/static/woff2/SUIT.css');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
+
+    /* 1. 밝고 화사한 오로라 파스텔 배경 애니메이션 */
+    @keyframes auroraMesh {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
     }
-    .gaming-hero::after {
+
+    .stApp {
+        background: linear-gradient(-45deg, #F8FAFC, #EEF2FF, #F0F9FF, #FDF2F8, #F5F3FF);
+        background-size: 300% 300%;
+        animation: auroraMesh 12s ease infinite;
+        color: #0F172A;
+        font-family: 'SUIT', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    header[data-testid="stHeader"] {
+        background: transparent;
+    }
+    .block-container {
+        padding-top: 1.8rem;
+        padding-bottom: 3.2rem;
+        max-width: 820px;
+    }
+
+    /* 2. 다채로운 키프레임 애니메이션 모음 */
+    @keyframes springPop {
+        0% {
+            opacity: 0;
+            transform: translateY(26px) scale(0.95);
+        }
+        65% {
+            opacity: 1;
+            transform: translateY(-4px) scale(1.01);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    @keyframes floatBob {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-8px) rotate(1.5deg); }
+    }
+
+    @keyframes slowSpin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    @keyframes shimmerGlide {
+        0% { transform: translateX(-140%) skewX(-20deg); }
+        60%, 100% { transform: translateX(260%) skewX(-20deg); }
+    }
+
+    @keyframes pulseRing {
+        0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.45); }
+        70% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+    }
+
+    @keyframes slideReveal {
+        0% {
+            opacity: 0;
+            transform: translateX(-18px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    /* 3. 상단 히어로 배너 + 우측 FPS 게이지 위젯 레이아웃 */
+    .hero-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        padding: 1.9rem 2.1rem;
+        margin-bottom: 1.6rem;
+        border-radius: 26px;
+        background: rgba(255, 255, 255, 0.84);
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
+        border: 1.5px solid rgba(255, 255, 255, 0.95);
+        box-shadow:
+            0 20px 45px rgba(99, 102, 241, 0.10),
+            0 4px 12px rgba(15, 23, 42, 0.04);
+        overflow: hidden;
+        animation: springPop 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    /* 유리 카드 위를 스치는 빛 반사 애니메이션 */
+    .hero-wrapper::after {
         content: "";
         position: absolute;
-        top: -40%;
-        right: -10%;
-        width: 240px;
-        height: 240px;
-        background: radial-gradient(circle, rgba(56, 189, 248, 0.25) 0%, transparent 70%);
+        top: 0;
+        left: 0;
+        width: 40%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.78), transparent);
+        animation: shimmerGlide 5.5s ease-in-out infinite;
         pointer-events: none;
     }
-    .hero-tag {
-        display: inline-block;
-        padding: 0.25rem 0.75rem;
-        font-size: 0.75rem;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        border-radius: 999px;
-        background: rgba(56, 189, 248, 0.18);
-        color: #38bdf8;
-        border: 1px solid rgba(56, 189, 248, 0.45);
-        margin-bottom: 0.65rem;
+
+    /* 배경 장식 플로팅 버블 */
+    .deco-orb-1 {
+        position: absolute;
+        top: -30px;
+        left: 35%;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(129, 140, 248, 0.22) 0%, transparent 70%);
+        animation: floatBob 5s ease-in-out infinite;
+        pointer-events: none;
     }
-    .gaming-hero h1 {
-        margin: 0;
-        font-size: 1.95rem;
+    .deco-orb-2 {
+        position: absolute;
+        bottom: -35px;
+        right: 28%;
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(14, 165, 233, 0.20) 0%, transparent 70%);
+        animation: floatBob 6.5s ease-in-out infinite reverse;
+        pointer-events: none;
+    }
+
+    .hero-left {
+        flex: 1.4;
+        z-index: 2;
+    }
+
+    .live-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0.34rem 0.9rem;
+        border-radius: 999px;
+        font-family: 'Plus Jakarta Sans', 'SUIT', sans-serif;
+        font-size: 0.75rem;
         font-weight: 800;
-        letter-spacing: -0.02em;
-        background: linear-gradient(90deg, #ffffff 0%, #c7d2fe 100%);
+        letter-spacing: 0.05em;
+        color: #4F46E5;
+        background: linear-gradient(90deg, #EEF2FF 0%, #E0F2FE 100%);
+        border: 1px solid rgba(99, 102, 241, 0.28);
+        margin-bottom: 0.85rem;
+    }
+
+    .live-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #6366F1;
+        animation: pulseRing 2s infinite;
+    }
+
+    .hero-left h1 {
+        margin: 0;
+        font-size: 1.98rem;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        line-height: 1.24;
+        color: #0F172A;
+    }
+
+    .hero-left h1 .grad-text {
+        background: linear-gradient(120deg, #4F46E5 0%, #7C3AED 50%, #0EA5E9 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
-    .gaming-hero p {
-        margin: 0.45rem 0 0;
-        font-size: 0.96rem;
-        color: #cbd5e1;
+
+    .hero-left p {
+        margin: 0.6rem 0 0.95rem;
+        font-size: 0.94rem;
+        line-height: 1.5;
+        color: #475569;
+        font-weight: 500;
     }
 
-    /* 분석하기 버튼 커스텀 */
-    div.stButton > button[kind="primary"] {
-        background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
-        border: none;
-        border-radius: 12px;
-        padding: 0.65rem 1.2rem;
+    .chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .mini-chip {
+        font-size: 0.76rem;
         font-weight: 700;
-        font-size: 1.02rem;
-        box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
-        transition: all 0.2s ease;
+        padding: 0.26rem 0.7rem;
+        border-radius: 999px;
+        background: #F1F5F9;
+        color: #334155;
+        border: 1px solid #E2E8F0;
+        transition: transform 0.2s ease, background 0.2s ease;
+    }
+    .mini-chip:hover {
+        transform: translateY(-2px);
+        background: #E0E7FF;
+        color: #4338CA;
+    }
+
+    /* 우측 회전형 FPS 타겟 게이지 카드 */
+    .gauge-card {
+        position: relative;
+        flex: 0.78;
+        min-width: 175px;
+        padding: 1rem;
+        border-radius: 22px;
+        background: linear-gradient(155deg, #FFFFFF 0%, #EEF2FF 60%, #E0F2FE 100%);
+        border: 1.5px solid rgba(99, 102, 241, 0.25);
+        box-shadow: 0 12px 26px rgba(99, 102, 241, 0.10);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+        animation: floatBob 4.5s ease-in-out infinite;
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .gauge-card:hover {
+        transform: scale(1.05);
+    }
+
+    .ring-box {
+        position: relative;
+        width: 92px;
+        height: 92px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .ring-spinner {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 3px dashed #818CF8;
+        animation: slowSpin 14s linear infinite;
+    }
+
+    .ring-inner {
+        width: 74px;
+        height: 74px;
+        border-radius: 50%;
+        background: #FFFFFF;
+        box-shadow: 0 4px 14px rgba(79, 70, 229, 0.14);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .ring-num {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #4F46E5;
+        line-height: 1.1;
+    }
+
+    .ring-unit {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 0.65rem;
+        font-weight: 800;
+        color: #64748B;
+        letter-spacing: 0.05em;
+    }
+
+    .gauge-label {
+        margin-top: 0.55rem;
+        font-size: 0.74rem;
+        font-weight: 800;
+        color: #4338CA;
+        background: rgba(224, 231, 255, 0.85);
+        padding: 0.2rem 0.65rem;
+        border-radius: 999px;
+    }
+
+    @media (max-width: 640px) {
+        .hero-wrapper {
+            flex-direction: column;
+            text-align: center;
+        }
+        .chip-row {
+            justify-content: center;
+        }
+    }
+
+    /* 4. 입력 컨트롤 카드 스타일 */
+    div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(14px);
+        border: 1.5px solid rgba(226, 232, 240, 0.95);
+        border-radius: 18px;
+        padding: 1.05rem 1.2rem 0.8rem;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+        transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:hover {
+        transform: translateY(-3px);
+        border-color: #818CF8;
+        box-shadow: 0 14px 30px rgba(99, 102, 241, 0.12);
+    }
+
+    div[data-testid="stWidgetLabel"] p {
+        color: #1E293B !important;
+        font-weight: 700 !important;
+        font-size: 0.96rem !important;
+    }
+    .stCaption {
+        color: #4F46E5 !important;
+        font-weight: 700 !important;
+    }
+
+    /* 5. 실행 버튼 (스프링 바운스 + 그라데이션 광택) */
+    div.stButton > button[kind="primary"] {
+        margin-top: 0.7rem;
+        background: linear-gradient(120deg, #4F46E5 0%, #7C3AED 50%, #0EA5E9 100%) !important;
+        background-size: 200% auto !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        border-radius: 16px !important;
+        padding: 0.82rem 1.5rem !important;
+        font-family: 'SUIT', sans-serif !important;
+        font-weight: 800 !important;
+        font-size: 1.06rem !important;
+        letter-spacing: -0.01em;
+        box-shadow: 0 10px 26px rgba(99, 102, 241, 0.32) !important;
+        transition: all 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
     }
     div.stButton > button[kind="primary"]:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 24px rgba(124, 58, 237, 0.45);
+        background-position: right center !important;
+        transform: translateY(-4px) scale(1.015) !important;
+        box-shadow: 0 16px 34px rgba(14, 165, 233, 0.35) !important;
+    }
+    div.stButton > button[kind="primary"]:active {
+        transform: scale(0.97) !important;
     }
 
-    /* 강조 수치(Metric) 카드 디자인 */
-    div[data-testid="stMetric"] {
-        background: linear-gradient(145deg, rgba(30, 41, 59, 0.05) 0%, rgba(99, 102, 241, 0.09) 100%);
-        border: 1px solid rgba(99, 102, 241, 0.28);
-        border-radius: 16px;
-        padding: 1rem 1.2rem;
-        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+    /* 6. 결과 출력 애니메이션 (1. 텍스트 메시지 -> 2. 테이블 -> 3. 강조 수치) */
+    /* [출력 1] 텍스트 메시지 */
+    div[data-testid="stAlert"] {
+        border-radius: 16px !important;
+        border: 1.5px solid rgba(99, 102, 241, 0.25) !important;
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+        animation: slideReveal 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     }
-    div[data-testid="stMetricLabel"] {
-        font-weight: 600;
-        opacity: 0.85;
+
+    /* [출력 2] 데이터프레임(테이블) */
+    div[data-testid="stDataFrame"] {
+        border-radius: 18px !important;
+        overflow: hidden !important;
+        border: 1.5px solid rgba(129, 140, 248, 0.32) !important;
+        box-shadow: 0 14px 34px rgba(99, 102, 241, 0.09) !important;
+        animation: springPop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.14s backwards;
+    }
+
+    /* [출력 3] 강조 수치 (Metric) 카드 */
+    div[data-testid="stMetric"] {
+        background: linear-gradient(155deg, rgba(255, 255, 255, 0.95) 0%, rgba(238, 242, 255, 0.85) 100%);
+        border: 1.5px solid rgba(129, 140, 248, 0.32);
+        border-radius: 20px;
+        padding: 1.1rem 1.2rem;
+        box-shadow: 0 10px 26px rgba(99, 102, 241, 0.08);
+        transition: all 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+        animation: springPop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.28s backwards;
+    }
+    div[data-testid="stMetric"]:hover {
+        transform: translateY(-7px) scale(1.03) rotate(0.6deg);
+        border-color: #6366F1;
+        box-shadow: 0 18px 36px rgba(99, 102, 241, 0.20);
+    }
+    div[data-testid="stMetricLabel"] p {
+        color: #475569 !important;
+        font-size: 0.86rem !important;
+        font-weight: 700 !important;
     }
     div[data-testid="stMetricValue"] {
-        font-weight: 800;
-        color: #4f46e5;
+        font-family: 'Plus Jakarta Sans', 'SUIT', sans-serif !important;
+        font-weight: 800 !important;
+        font-size: 1.7rem !important;
+        background: linear-gradient(120deg, #4F46E5 0%, #0EA5E9 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    h3 {
+        color: #0F172A !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.02em !important;
+        margin-top: 1.35rem !important;
     }
     </style>
-    <div class="gaming-hero">
-        <div class="hero-tag">PC GAMING PERFORMANCE ANALYZER</div>
-        <h1>🎮 내 PC 게임 프레임(FPS) 예측기</h1>
-        <p>그래픽카드와 그래픽 품질 옵션을 선택해 게임별 예상 프레임과 플레이 적합도를 확인하세요</p>
+
+    <div class="hero-wrapper">
+        <div class="deco-orb-1"></div>
+        <div class="deco-orb-2"></div>
+
+        <div class="hero-left">
+            <div class="live-badge">
+                <span class="live-dot"></span>
+                REAL-TIME FPS ANALYZER ✨
+            </div>
+            <h1>내 PC 게임 <span class="grad-text">프레임(FPS)</span> 예측기</h1>
+            <p>그래픽카드와 그래픽 품질 옵션을 선택하면 게임별 예상 프레임과 플레이 적합도를 실시간으로 분석합니다.</p>
+            <div class="chip-row">
+                <span class="mini-chip">🟢 120+ FPS 적합</span>
+                <span class="mini-chip">🟡 60+ FPS 보통</span>
+                <span class="mini-chip">🔴 60 미만 미달</span>
+            </div>
+        </div>
+
+        <div class="gauge-card">
+            <div class="ring-box">
+                <div class="ring-spinner"></div>
+                <div class="ring-inner">
+                    <span class="ring-num">120+</span>
+                    <span class="ring-unit">TARGET FPS</span>
+                </div>
+            </div>
+            <div class="gauge-label">⚡ BENCHMARK READY</div>
+        </div>
     </div>
     """,
     unsafe_allow_html=True,
@@ -131,13 +478,13 @@ def predict_fps(gpu_name, option):
     fps = min(fps_list)
     if fps >= 120:
         suitability = "적합"
-        message = f"[{suitability}] {gpu_name} 환경에서는 모든 게임이 120 FPS 이상으로 매우 쾌적하게 구동됩니다!"
+        message = f"[{suitability}] {gpu_name} 환경에서는 모든 게임이 120 FPS 이상으로 매우 적합합니다!"
     elif fps >= 60:
         suitability = "보통"
         message = f"[{suitability}] {gpu_name} 환경에서는 모든 게임이 60 FPS 이상으로 무난하게 플레이 가능합니다."
     else:
         suitability = "미달"
-        message = f"[{suitability}] {gpu_name} 환경에서는 일부 고사양 게임이 60 FPS 미만으로 옵션 조정이 필요합니다."
+        message = f"[{suitability}] {gpu_name} 환경에서는 일부 고사양 게임이 60 FPS 미만으로 그래픽 옵션 조정이 필요합니다."
 
     return fps_list, message
 
@@ -150,12 +497,12 @@ with col1:
     selected_gpu = st.selectbox("🖥️ 그래픽카드(GPU) 선택", gpu_list, index=1)
 with col2:
     selected_option = st.slider("⚙️ 그래픽 품질 옵션", 1, 5, 2)
-    st.caption(f"현재 선택된 옵션: **{option_names[selected_option - 1]} ({selected_option}단계)**")
+    st.caption(f"✨ 현재 선택 옵션: {option_names[selected_option - 1]} ({selected_option}단계)")
 
 # =============================================
 # 4. 버튼 클릭 시 함수 실행
 # =============================================
-if st.button("🚀 프레임 및 적합도 분석하기", type="primary", use_container_width=True):
+if st.button("✨ 예상 FPS 및 적합도 분석하기", type="primary", use_container_width=True):
     fps_list, message = predict_fps(selected_gpu, selected_option)
 
     # =============================================
@@ -180,7 +527,8 @@ if st.button("🚀 프레임 및 적합도 분석하기", type="primary", use_co
 
     # [출력 1] 텍스트 메시지
     if min(fps_list) >= 120:
-        st.success(message, icon="🔥")
+        st.success(message, icon="🎉")
+        st.balloons()
     elif min(fps_list) >= 60:
         st.info(message, icon="✅")
     else:
@@ -224,7 +572,7 @@ if st.button("🚀 프레임 및 적합도 분석하기", type="primary", use_co
     m2.metric("최고 프레임 게임", best_game, f"{max(fps_list)} FPS")
     m3.metric("적합(120↑) 게임 수", f"{fit_count} / {len(games)}개")
 
-    with st.expander("ℹ️ 프레임 계산 및 적합도 기준 보기"):
+    with st.expander("ℹ️ 프레임 산출 및 적합도 기준 보기"):
         st.markdown(
             f"""
             - **적합도 기준**: `120 FPS 이상` **적합** / `60 FPS 이상` **보통** / `60 FPS 미만` **미달**
@@ -232,4 +580,4 @@ if st.button("🚀 프레임 및 적합도 분석하기", type="primary", use_co
             """
         )
 else:
-    st.info("그래픽카드와 옵션을 선택한 뒤 **프레임 및 적합도 분석하기** 버튼을 눌러 주세요.", icon="👆")
+    st.info("위에서 그래픽카드와 옵션을 선택한 뒤 **예상 FPS 및 적합도 분석하기** 버튼을 눌러 주세요!", icon="👆")
