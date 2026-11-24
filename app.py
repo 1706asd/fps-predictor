@@ -1,3 +1,28 @@
+import streamlit as st
+import streamlit.components.v1 as components
+
+# 1. Streamlit 페이지 기본 설정
+st.set_page_config(
+    page_title="스타라이트 갤럭시 디펜더",
+    page_icon="🚀",
+    layout="wide"
+)
+
+# 상단 여백 최소화 스타일
+st.markdown(
+    """
+    <style>
+        .block-container {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# 2. HTML/CSS/JS 게임 코드를 파이썬 삼중 따옴표 문자열(raw string)로 감싸기
+GAME_HTML = r"""
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -8,9 +33,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet" />
   <style>
-    /* =========================================================================
-       NEON CYBER ARCADE DESIGN SYSTEM
-       ========================================================================= */
     :root {
       --bg-deep: #040711;
       --bg-panel: rgba(11, 18, 36, 0.88);
@@ -45,7 +67,6 @@
       justify-content: center;
     }
 
-    /* Main Game Container */
     .game-shell {
       position: relative;
       width: 100%;
@@ -58,7 +79,6 @@
       gap: 10px;
     }
 
-    /* Top Telemetry HUD Bar */
     .hud-bar {
       display: flex;
       align-items: center;
@@ -110,7 +130,6 @@
       text-shadow: 0 0 10px rgba(255, 42, 133, 0.5);
     }
 
-    /* HP & Overdrive Bars */
     .bar-wrap {
       display: flex;
       flex-direction: column;
@@ -143,7 +162,6 @@
       transition: width 0.12s ease-out;
     }
 
-    /* Canvas Stage */
     .canvas-stage {
       position: relative;
       flex: 1;
@@ -163,7 +181,6 @@
       cursor: crosshair;
     }
 
-    /* Bottom External Control Strip */
     .control-bar {
       display: flex;
       align-items: center;
@@ -213,7 +230,6 @@
       to   { box-shadow: 0 0 26px rgba(255, 190, 11, 0.95); }
     }
 
-    /* Overlay Screens (Start / Game Over / Pause) */
     .overlay-modal {
       position: absolute;
       inset: 0;
@@ -337,7 +353,6 @@
 <body>
 
   <div class="game-shell">
-    <!-- Top HUD Telemetry -->
     <header class="hud-bar">
       <div class="hud-group">
         <div class="stat-box">
@@ -377,11 +392,9 @@
       </div>
     </header>
 
-    <!-- Main Game Canvas Stage -->
     <main class="canvas-stage" id="canvasStage">
       <canvas id="gameCanvas"></canvas>
 
-      <!-- Start Screen Overlay -->
       <div class="overlay-modal" id="startOverlay">
         <div class="title-badge">NEON CYBER SHOOTER</div>
         <h1 class="main-title">STARLIGHT<br>DEFENDER</h1>
@@ -396,7 +409,6 @@
         <button class="start-cta" id="btnStartGame" type="button">🚀 출격 시작 (PLAY)</button>
       </div>
 
-      <!-- Game Over Overlay -->
       <div class="overlay-modal hidden" id="gameOverOverlay">
         <div class="title-badge" style="color:#ff2a85; border-color:rgba(255,42,133,0.5);">MISSION TERMINATED</div>
         <h2 class="main-title">함선 대파</h2>
@@ -419,7 +431,6 @@
       </div>
     </main>
 
-    <!-- External Control Buttons Bar -->
     <footer class="control-bar">
       <button class="arcade-btn" id="btnNova" type="button">💥 노바 폭탄 (SPACE)</button>
       <button class="arcade-btn" id="btnPause" type="button">⏸️ 일시정지</button>
@@ -431,9 +442,6 @@
     (() => {
       'use strict';
 
-      /* =======================================================================
-         1. WEB AUDIO API RETRO SYNTHESIZER (NO EXTERNAL AUDIO URLS)
-         ======================================================================= */
       class ArcadeSynth {
         constructor() {
           this.ctx = null;
@@ -553,10 +561,6 @@
       }
 
       const synth = new ArcadeSynth();
-
-      /* =======================================================================
-         2. RESPONSIVE CANVAS SETUP & GAME STATE
-         ======================================================================= */
       const canvas = document.getElementById('gameCanvas');
       const ctx = canvas.getContext('2d');
       const stageEl = document.getElementById('canvasStage');
@@ -582,14 +586,14 @@
       window.addEventListener('resize', resizeCanvas);
 
       const game = {
-        mode: 'menu', // 'menu' | 'playing' | 'paused' | 'gameover'
+        mode: 'menu',
         score: 0,
         highScore: 0,
         wave: 1,
         combo: 1,
         maxCombo: 1,
         comboTimer: 0,
-        novaCharge: 0, // 0..100
+        novaCharge: 0,
         novaWaveRadius: 0,
         novaActive: false,
         screenShake: 0,
@@ -666,9 +670,6 @@
         game.waveBannerTimer = 2.4;
       }
 
-      /* =======================================================================
-         3. INPUT HANDLERS (KEYBOARD, MOUSE, TOUCH)
-         ======================================================================= */
       const keys = {};
       const pointer = { active: false, x: 0, y: 0 };
 
@@ -692,7 +693,7 @@
       function updatePointerPos(clientX, clientY) {
         const rect = canvas.getBoundingClientRect();
         pointer.x = clientX - rect.left;
-        pointer.y = clientY - rect.top - 22; // Slight offset so finger doesn't cover ship
+        pointer.y = clientY - rect.top - 22;
       }
 
       canvas.addEventListener('mousedown', (e) => {
@@ -731,9 +732,6 @@
         pointer.active = false;
       });
 
-      /* =======================================================================
-         4. COMBAT MECHANICS, ENEMY SPAWNING & POWERUPS
-         ======================================================================= */
       function spawnPlayerBullets() {
         const p = game.player;
         const lv = p.weaponLevel;
@@ -749,7 +747,6 @@
           game.bullets.push({ x: p.x - 13, y: p.y - 14, vx: -75, vy: -710, dmg: 12, color: '#00f3ff', r: 4 });
           game.bullets.push({ x: p.x + 13, y: p.y - 14, vx: 75, vy: -710, dmg: 12, color: '#00f3ff', r: 4 });
         } else {
-          // Max Overclock Quad + Wing Plasma
           game.bullets.push({ x: p.x - 7, y: p.y - 22, vx: 0, vy: -780, dmg: 16, color: '#ffbe0b', r: 4.5 });
           game.bullets.push({ x: p.x + 7, y: p.y - 22, vx: 0, vy: -780, dmg: 16, color: '#ffbe0b', r: 4.5 });
           game.bullets.push({ x: p.x - 18, y: p.y - 12, vx: -115, vy: -740, dmg: 13, color: '#00ff88', r: 4 });
@@ -764,49 +761,25 @@
         const roll = Math.random();
 
         if (roll < 0.5) {
-          // Scout Drone (Fast, zig-zag)
           game.enemies.push({
-            type: 'scout',
-            x,
-            y: -28,
-            r: 16,
-            hp: Math.round(24 * waveScale),
-            maxHp: Math.round(24 * waveScale),
-            vy: 145 + game.wave * 10,
-            phase: Math.random() * Math.PI * 2,
-            shootTimer: 1.5 + Math.random() * 1.4,
-            scoreVal: 120,
-            color: '#ff2a85'
+            type: 'scout', x, y: -28, r: 16,
+            hp: Math.round(24 * waveScale), maxHp: Math.round(24 * waveScale),
+            vy: 145 + game.wave * 10, phase: Math.random() * Math.PI * 2,
+            shootTimer: 1.5 + Math.random() * 1.4, scoreVal: 120, color: '#ff2a85'
           });
         } else if (roll < 0.82) {
-          // Interceptor (Aimed burst shooter)
           game.enemies.push({
-            type: 'interceptor',
-            x,
-            y: -32,
-            r: 20,
-            hp: Math.round(46 * waveScale),
-            maxHp: Math.round(46 * waveScale),
-            vy: 95 + game.wave * 6,
-            phase: Math.random() * Math.PI * 2,
-            shootTimer: 1.1 + Math.random() * 0.9,
-            scoreVal: 240,
-            color: '#ffbe0b'
+            type: 'interceptor', x, y: -32, r: 20,
+            hp: Math.round(46 * waveScale), maxHp: Math.round(46 * waveScale),
+            vy: 95 + game.wave * 6, phase: Math.random() * Math.PI * 2,
+            shootTimer: 1.1 + Math.random() * 0.9, scoreVal: 240, color: '#ffbe0b'
           });
         } else {
-          // Heavy Cruiser (Armored tank)
           game.enemies.push({
-            type: 'cruiser',
-            x,
-            y: -40,
-            r: 28,
-            hp: Math.round(95 * waveScale),
-            maxHp: Math.round(95 * waveScale),
-            vy: 58 + game.wave * 4,
-            phase: 0,
-            shootTimer: 1.4,
-            scoreVal: 450,
-            color: '#a855f7'
+            type: 'cruiser', x, y: -40, r: 28,
+            hp: Math.round(95 * waveScale), maxHp: Math.round(95 * waveScale),
+            vy: 58 + game.wave * 4, phase: 0,
+            shootTimer: 1.4, scoreVal: 450, color: '#a855f7'
           });
         }
       }
@@ -818,19 +791,9 @@
         synth.playNova();
 
         game.enemies.push({
-          type: 'boss',
-          x: W / 2,
-          y: -85,
-          targetY: 105,
-          r: 56,
-          hp: bossHp,
-          maxHp: bossHp,
-          vy: 65,
-          phase: 0,
-          shootTimer: 1.0,
-          patternIdx: 0,
-          scoreVal: 3500,
-          color: '#ff2a85'
+          type: 'boss', x: W / 2, y: -85, targetY: 105, r: 56,
+          hp: bossHp, maxHp: bossHp, vy: 65, phase: 0,
+          shootTimer: 1.0, patternIdx: 0, scoreVal: 3500, color: '#ff2a85'
         });
       }
 
@@ -842,11 +805,9 @@
         game.screenShake = 16;
         synth.playNova();
 
-        // Clear all enemy projectiles
         game.enemyBullets = [];
         addFloatingText(game.player.x, game.player.y - 35, 'NOVA OVERDRIVE!!', '#ffbe0b');
 
-        // Deal massive area damage to all enemies
         for (let i = game.enemies.length - 1; i >= 0; i--) {
           const e = game.enemies[i];
           damageEnemy(e, i, 320);
@@ -859,26 +820,15 @@
           const angle = Math.random() * Math.PI * 2;
           const speed = (Math.random() * 180 + 45) * speedMult;
           game.particles.push({
-            x,
-            y,
-            vx: Math.cos(angle) * speed,
-            vy: Math.sin(angle) * speed,
-            life: 0.35 + Math.random() * 0.35,
-            maxLife: 0.7,
-            size: Math.random() * 3.5 + 1.5,
-            color
+            x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+            life: 0.35 + Math.random() * 0.35, maxLife: 0.7,
+            size: Math.random() * 3.5 + 1.5, color
           });
         }
       }
 
       function addFloatingText(x, y, text, color = '#00f3ff') {
-        game.floatingTexts.push({
-          x,
-          y,
-          text,
-          color,
-          life: 0.95
-        });
+        game.floatingTexts.push({ x, y, text, color, life: 0.95 });
       }
 
       function maybeDropPowerup(x, y) {
@@ -890,14 +840,8 @@
         ];
         const chosen = types[Math.floor(Math.random() * types.length)];
         game.powerups.push({
-          x,
-          y,
-          vy: 110,
-          r: 14,
-          kind: chosen.kind,
-          label: chosen.label,
-          color: chosen.color,
-          pulse: 0
+          x, y, vy: 110, r: 14,
+          kind: chosen.kind, label: chosen.label, color: chosen.color, pulse: 0
         });
       }
 
@@ -909,7 +853,6 @@
           spawnParticles(enemy.x, enemy.y, enemy.color, isBoss ? 48 : 16, isBoss ? 1.5 : 1);
           game.screenShake = Math.max(game.screenShake, isBoss ? 18 : 5);
 
-          // Score & Combo calculation
           const gained = enemy.scoreVal * game.combo;
           game.score += gained;
           if (game.score > game.highScore) game.highScore = game.score;
@@ -927,7 +870,6 @@
             game.waveKills = 0;
             game.waveQuota = 12 + game.wave * 3;
             triggerWaveBanner(`WAVE ${game.wave} 진입! 적 함대 증원`);
-            // Guaranteed drops from boss
             game.powerups.push({ x: enemy.x - 24, y: enemy.y, vy: 95, r: 14, kind: 'weapon', label: 'P', color: '#00f3ff', pulse: 0 });
             game.powerups.push({ x: enemy.x + 24, y: enemy.y, vy: 95, r: 14, kind: 'heal', label: '+', color: '#00ff88', pulse: 0 });
           } else {
@@ -970,11 +912,7 @@
         document.getElementById('gameOverOverlay').classList.remove('hidden');
       }
 
-      /* =======================================================================
-         5. UPDATE & SIMULATION LOOP
-         ======================================================================= */
       function update(dt) {
-        // Animate starfield even on menu
         for (const s of game.stars) {
           s.y += s.speed * dt;
           if (s.y > H) {
@@ -990,7 +928,6 @@
         if (game.screenShake > 0) game.screenShake = Math.max(0, game.screenShake - dt * 32);
         if (game.waveBannerTimer > 0) game.waveBannerTimer = Math.max(0, game.waveBannerTimer - dt);
 
-        // Combo decay
         if (game.combo > 1) {
           game.comboTimer -= dt;
           if (game.comboTimer <= 0) {
@@ -999,7 +936,6 @@
           }
         }
 
-        // Nova shockwave animation
         if (game.novaActive) {
           game.novaWaveRadius += dt * 950;
           if (game.novaWaveRadius > Math.max(W, H) * 1.2) {
@@ -1007,7 +943,6 @@
           }
         }
 
-        // Player Movement (Keyboard + Smooth Pointer Follow)
         const moveSpeed = 390;
         let dx = 0;
         let dy = 0;
@@ -1029,14 +964,12 @@
         p.x = Math.max(24, Math.min(W - 24, p.x));
         p.y = Math.max(40, Math.min(H - 28, p.y));
 
-        // Auto-fire player weapons
         p.fireCooldown -= dt;
         if (p.fireCooldown <= 0) {
           spawnPlayerBullets();
           p.fireCooldown = Math.max(0.11, 0.19 - p.weaponLevel * 0.018);
         }
 
-        // Spawn Enemies
         if (!game.bossActive) {
           game.spawnTimer -= dt;
           if (game.spawnTimer <= 0) {
@@ -1045,7 +978,6 @@
           }
         }
 
-        // Update Player Bullets
         for (let i = game.bullets.length - 1; i >= 0; i--) {
           const b = game.bullets[i];
           b.x += b.vx * dt;
@@ -1055,7 +987,6 @@
             continue;
           }
 
-          // Bullet vs Enemy collision
           for (let j = game.enemies.length - 1; j >= 0; j--) {
             const e = game.enemies[j];
             if (Math.hypot(b.x - e.x, b.y - e.y) < e.r + b.r) {
@@ -1067,7 +998,6 @@
           }
         }
 
-        // Update Enemies
         for (let i = game.enemies.length - 1; i >= 0; i--) {
           const e = game.enemies[i];
           e.phase += dt * 3.2;
@@ -1090,7 +1020,6 @@
 
           e.x = Math.max(e.r + 10, Math.min(W - e.r - 10, e.x));
 
-          // Enemy shooting logic
           e.shootTimer -= dt;
           if (e.shootTimer <= 0 && e.y > 20 && e.y < H - 120) {
             const ang = Math.atan2(p.y - e.y, p.x - e.x);
@@ -1110,19 +1039,16 @@
             } else if (e.type === 'boss') {
               e.patternIdx = (e.patternIdx + 1) % 3;
               if (e.patternIdx === 0) {
-                // Radial fan burst
                 for (let k = -3; k <= 3; k++) {
                   const a = Math.PI / 2 + k * 0.22;
                   game.enemyBullets.push({ x: e.x, y: e.y + 42, vx: Math.cos(a) * 285, vy: Math.sin(a) * 285, r: 6.5, color: '#ff2a85' });
                 }
               } else if (e.patternIdx === 1) {
-                // Twin aimed plasma
                 [-26, 26].forEach(ox => {
                   const a = Math.atan2(p.y - (e.y + 30), p.x - (e.x + ox));
                   game.enemyBullets.push({ x: e.x + ox, y: e.y + 30, vx: Math.cos(a) * 340, vy: Math.sin(a) * 340, r: 6, color: '#ffbe0b' });
                 });
               } else {
-                // Ring pulse
                 for (let k = 0; k < 10; k++) {
                   const a = (Math.PI * 2 * k) / 10 + e.phase;
                   game.enemyBullets.push({ x: e.x, y: e.y + 20, vx: Math.cos(a) * 220, vy: Math.sin(a) * 220, r: 5.5, color: '#00f3ff' });
@@ -1132,7 +1058,6 @@
             }
           }
 
-          // Enemy vs Player body collision
           if (Math.hypot(e.x - p.x, e.y - p.y) < e.r + p.r - 4) {
             damagePlayer(e.type === 'boss' ? 35 : 22);
             if (e.type !== 'boss') {
@@ -1142,13 +1067,11 @@
             }
           }
 
-          // Out of bottom bounds
           if (e.y > H + 60) {
             game.enemies.splice(i, 1);
           }
         }
 
-        // Update Enemy Bullets
         for (let i = game.enemyBullets.length - 1; i >= 0; i--) {
           const eb = game.enemyBullets[i];
           eb.x += eb.vx * dt;
@@ -1164,7 +1087,6 @@
           }
         }
 
-        // Update Powerups
         for (let i = game.powerups.length - 1; i >= 0; i--) {
           const pw = game.powerups[i];
           pw.y += pw.vy * dt;
@@ -1197,7 +1119,6 @@
           }
         }
 
-        // Update Particles
         for (let i = game.particles.length - 1; i >= 0; i--) {
           const pt = game.particles[i];
           pt.x += pt.vx * dt;
@@ -1208,7 +1129,6 @@
           if (pt.life <= 0) game.particles.splice(i, 1);
         }
 
-        // Update Floating Texts
         for (let i = game.floatingTexts.length - 1; i >= 0; i--) {
           const ft = game.floatingTexts[i];
           ft.y -= 42 * dt;
@@ -1217,9 +1137,6 @@
         }
       }
 
-      /* =======================================================================
-         6. NEON VECTOR & PARTICLE RENDERER
-         ======================================================================= */
       function draw() {
         ctx.save();
         if (game.screenShake > 0) {
@@ -1230,7 +1147,6 @@
 
         ctx.clearRect(-20, -20, W + 40, H + 40);
 
-        // Starfield
         for (const s of game.stars) {
           ctx.fillStyle = `rgba(210, 235, 255, ${s.alpha})`;
           ctx.beginPath();
@@ -1238,7 +1154,6 @@
           ctx.fill();
         }
 
-        // Nova Shockwave Ring
         if (game.novaActive && game.player) {
           ctx.save();
           ctx.strokeStyle = 'rgba(255, 190, 11, 0.85)';
@@ -1251,7 +1166,6 @@
           ctx.restore();
         }
 
-        // Powerups
         for (const pw of game.powerups) {
           ctx.save();
           const scale = 1 + Math.sin(pw.pulse) * 0.12;
@@ -1275,7 +1189,6 @@
           ctx.restore();
         }
 
-        // Player Bullets
         for (const b of game.bullets) {
           ctx.save();
           ctx.shadowColor = b.color;
@@ -1287,7 +1200,6 @@
           ctx.restore();
         }
 
-        // Enemy Bullets
         for (const eb of game.enemyBullets) {
           ctx.save();
           ctx.shadowColor = eb.color;
@@ -1303,17 +1215,14 @@
           ctx.restore();
         }
 
-        // Enemies
         for (const e of game.enemies) {
           drawEnemyShip(e);
         }
 
-        // Player Starfighter
         if (game.player && game.mode !== 'gameover') {
           drawPlayerShip(game.player);
         }
 
-        // Particles
         for (const pt of game.particles) {
           ctx.save();
           ctx.globalAlpha = Math.max(0, pt.life / pt.maxLife);
@@ -1326,7 +1235,6 @@
           ctx.restore();
         }
 
-        // Floating Texts
         for (const ft of game.floatingTexts) {
           ctx.save();
           ctx.globalAlpha = Math.min(1, ft.life * 1.3);
@@ -1339,7 +1247,6 @@
           ctx.restore();
         }
 
-        // Wave Announcement Banner
         if (game.waveBannerTimer > 0) {
           ctx.save();
           ctx.globalAlpha = Math.min(1, game.waveBannerTimer);
@@ -1370,7 +1277,6 @@
         }
         ctx.translate(p.x, p.y);
 
-        // Twin Engine Thruster Flame
         const flameH = 14 + Math.random() * 10;
         ctx.fillStyle = '#00f3ff';
         ctx.shadowColor = '#00f3ff';
@@ -1384,7 +1290,6 @@
         ctx.lineTo(8, 14);
         ctx.fill();
 
-        // Main Sleek Delta Hull
         ctx.fillStyle = '#0c1933';
         ctx.strokeStyle = '#00f3ff';
         ctx.lineWidth = 2.4;
@@ -1399,7 +1304,6 @@
         ctx.fill();
         ctx.stroke();
 
-        // Glowing Cockpit Core
         ctx.fillStyle = '#00ff88';
         ctx.beginPath();
         ctx.ellipse(0, -3, 4, 9, 0, 0, Math.PI * 2);
@@ -1442,7 +1346,6 @@
           ctx.fill();
           ctx.stroke();
         } else if (e.type === 'boss') {
-          // Dreadnought Boss Geometry
           ctx.beginPath();
           ctx.moveTo(0, 56);
           ctx.lineTo(58, 14);
@@ -1453,13 +1356,11 @@
           ctx.fill();
           ctx.stroke();
 
-          // Boss Reactor Core
           ctx.fillStyle = '#ffbe0b';
           ctx.beginPath();
           ctx.arc(0, 4, 14, 0, Math.PI * 2);
           ctx.fill();
 
-          // Boss Top Health Bar
           const barW = 96;
           const hpRatio = Math.max(0, e.hp / e.maxHp);
           ctx.fillStyle = 'rgba(0,0,0,0.75)';
@@ -1471,9 +1372,6 @@
         ctx.restore();
       }
 
-      /* =======================================================================
-         7. HUD & EXTERNAL BUTTON CONTROLS
-         ======================================================================= */
       function updateHud() {
         document.getElementById('hudScore').textContent = game.score.toLocaleString();
         document.getElementById('hudWave').textContent = game.wave;
@@ -1537,9 +1435,6 @@
         document.getElementById('btnSound').textContent = muted ? '🔇 사운드 OFF' : '🔊 사운드 ON';
       });
 
-      /* =======================================================================
-         8. MAIN ANIMATION LOOP (WINDOW ONLOAD)
-         ======================================================================= */
       let lastTime = performance.now();
 
       function gameLoop(now) {
@@ -1561,3 +1456,7 @@
   </script>
 </body>
 </html>
+"""
+
+# 3. Streamlit 화면에 HTML 게임 임베드 실행
+components.html(GAME_HTML, height=840, scrolling=False)
